@@ -2,14 +2,11 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
-
-	"github.com/cloudfoundry-samples/ratelimit-service/store"
 )
 
 const (
@@ -42,46 +39,29 @@ func newProxy() http.Handler {
 			req.URL = url
 			req.Host = url.Host
 		},
-		Transport: newRateLimiter(),
+		Transport: newRateLimitedRoundTripper(),
 	}
 	return proxy
 }
 
-type RateLimiter struct {
-	store     store.Store
-	transport http.RoundTripper
+type RateLimitedRoundTripper struct {
+	rateLimiter *RateLimiter
+	transport   http.RoundTripper
 }
 
-func newRateLimiter() *RateLimiter {
-	return &RateLimiter{
-		store:     store.NewStore(),
-		transport: http.DefaultTransport,
+func newRateLimitedRoundTripper() *RateLimitedRoundTripper {
+	return &RateLimitedRoundTripper{
+		rateLimiter: NewRateLimiter(limit),
+		transport:   http.DefaultTransport,
 	}
 }
 
-func (r *RateLimiter) exceedsLimit(ip string) bool {
-	current := r.store.Increment(ip)
-
-	// if first request set expiry time
-	if current == 1 {
-		r.store.ExpiresIn(60, ip)
-	}
-
-	// if exceeds limit
-	if current > limit {
-		fmt.Printf("rate limit exceeded for %s\n", ip)
-		return true
-	}
-
-	return false
-}
-
-func (r *RateLimiter) RoundTrip(req *http.Request) (*http.Response, error) {
+func (r *RateLimitedRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	var err error
 	var res *http.Response
 
 	remoteIP := req.Header.Get(REMOTE_ADDRESS)
-	if r.exceedsLimit(remoteIP) {
+	if r.rateLimiter.ExceedsLimit(remoteIP) {
 		// fix this to properly return an http status of 429
 		return nil, errors.New("http 429 - too many requests")
 	}
