@@ -72,6 +72,7 @@ func (r *RateLimiter) exceedsLimit(ip string) bool {
 	// if exceeds limit
 	if current > limit {
 		fmt.Printf("rate limit exceeded for %s\n", ip)
+		return true
 	}
 
 	// if first request set expiry time
