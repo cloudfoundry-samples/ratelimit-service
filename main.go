@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -9,8 +10,9 @@ import (
 )
 
 const (
-	DEFAULT_PORT            = "8080"
-	CF_FORWARDED_URL_HEADER = "X-Cf-Forwarded-Url"
+	DEFAULT_PORT     = "8080"
+	CF_FORWARDED_URL = "X-Cf-Forwarded-Url"
+	REMOTE_ADDRESS   = "REMOTE_ADDR"
 )
 
 func main() {
@@ -26,7 +28,7 @@ func main() {
 func newProxy() http.Handler {
 	proxy := &httputil.ReverseProxy{
 		Director: func(req *http.Request) {
-			forwardedURL := req.Header.Get(CF_FORWARDED_URL_HEADER)
+			forwardedURL := req.Header.Get(CF_FORWARDED_URL)
 
 			url, err := url.Parse(forwardedURL)
 			if err != nil {
@@ -51,13 +53,23 @@ func newRateLimiter() *RateLimiter {
 	}
 }
 
-func (r *RateLimiter) RoundTrip(request *http.Request) (*http.Response, error) {
+func (r *RateLimiter) exceedsLimit(ip string) bool {
+	// need to implement rate limiting / ticker
+	return false
+}
+
+func (r *RateLimiter) RoundTrip(req *http.Request) (*http.Response, error) {
 	var err error
 	var res *http.Response
 
 	// TODO: add simple in-memory rate limiting logic
+	remoteIP := req.Header.Get(REMOTE_ADDRESS)
+	if r.exceedsLimit(remoteIP) {
+		// fix this to properly return an http status of 429
+		return nil, errors.New("http 429 - too many requests")
+	}
 
-	res, err = r.transport.RoundTrip(request)
+	res, err = r.transport.RoundTrip(req)
 	if err != nil {
 		return nil, err
 	}
