@@ -81,3 +81,16 @@ $ curl -I myapp.bosh-lite.com
 HTTP/1.1 429 Too Many Requests
 . . .
 ```
+
+
+
+### Unbinding Route Service
+If you want to turn off rate limiting, the following will unbind the application's route from the route service instance.
+
+```
+cf unbind-route-service bosh-lite.com ratelimiter-service --hostname myapp
+
+Unbinding may leave apps mapped to route myapp.bosh-lite.com vulnerable; e.g. if service instance ratelimiter-service provides authentication. Do you want to proceed?> yes
+Unbinding route myapp.bosh-lite.com from service instance ratelimiter-service in org my-org / space my-space as admin...
+OK
+```
