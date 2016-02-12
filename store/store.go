@@ -6,15 +6,17 @@ import (
 	"time"
 )
 
+// store represents a key/value storage with counter and expiry of keys
 type Store interface {
 	Increment(string) int
 	ExpiresIn(time.Duration, string)
 	CountFor(string) int
 }
 
+// in-memory store is a simple map-backed key store
 type InMemoryStore struct {
 	storage map[string]*Entry
-	sync.Mutex
+	sync.RWMutex
 }
 
 type Entry struct {
@@ -54,8 +56,8 @@ func (s *InMemoryStore) Increment(key string) int {
 }
 
 func (s *InMemoryStore) get(key string) (*Entry, bool) {
-	s.Lock()
-	defer s.Unlock()
+	s.RLock()
+	defer s.RUnlock()
 	v, ok := s.storage[key]
 	return v, ok
 }

@@ -27,7 +27,6 @@ var _ = Describe("RateLimiter", func() {
 		})
 
 		It("reports if rate exceeded and resets", func() {
-
 			ip := "192.168.1.1"
 
 			for i := 0; i < limit; i++ {
