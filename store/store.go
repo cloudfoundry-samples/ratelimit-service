@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -82,6 +83,7 @@ func (s *InMemoryStore) expiryCycle() {
 			s.Lock()
 			for k, v := range s.storage {
 				if v.Expired() {
+					fmt.Printf("removing expired key [%s]\n", k)
 					delete(s.storage, k)
 				}
 			}

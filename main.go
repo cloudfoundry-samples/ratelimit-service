@@ -7,6 +7,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"time"
 )
 
 const (
@@ -14,6 +15,7 @@ const (
 	CF_FORWARDED_URL = "X-Cf-Forwarded-Url"
 	REMOTE_ADDRESS   = "REMOTE_ADDR"
 	limit            = 10
+	duration         = 60 * time.Second
 )
 
 func main() {
@@ -51,7 +53,7 @@ type RateLimitedRoundTripper struct {
 
 func newRateLimitedRoundTripper() *RateLimitedRoundTripper {
 	return &RateLimitedRoundTripper{
-		rateLimiter: NewRateLimiter(limit),
+		rateLimiter: NewRateLimiter(limit, duration),
 		transport:   http.DefaultTransport,
 	}
 }

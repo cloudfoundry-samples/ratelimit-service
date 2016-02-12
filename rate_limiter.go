@@ -8,14 +8,16 @@ import (
 )
 
 type RateLimiter struct {
-	limit int
-	store store.Store
+	limit    int
+	duration time.Duration
+	store    store.Store
 }
 
-func NewRateLimiter(limit int) *RateLimiter {
+func NewRateLimiter(limit int, duration time.Duration) *RateLimiter {
 	return &RateLimiter{
-		limit: limit,
-		store: store.NewStore(),
+		limit:    limit,
+		duration: duration,
+		store:    store.NewStore(),
 	}
 }
 
@@ -24,7 +26,7 @@ func (r *RateLimiter) ExceedsLimit(ip string) bool {
 
 	// if first request set expiry time
 	if current == 1 {
-		r.store.ExpiresIn(60*time.Second, ip)
+		r.store.ExpiresIn(r.duration, ip)
 	}
 
 	// if exceeds limit
