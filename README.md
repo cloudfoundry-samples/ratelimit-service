@@ -6,7 +6,7 @@ A simple in-memory rate limiting route service for Cloud Foundry.
 This rate limiter route service app is a forwarding proxy that will limit the number of requests for a given client IP for a given duration.
 For example, maximum 10 requests per minute.
 
-If you would like more information about Route Services in Cloud Foundry, please refer to this [doc](https://docs.google.com/document/d/1bGOQxiKkmaw6uaRWGd-sXpxL0Y28d3QihcluI15FiIA/edit#heading=h.8djffzes9pnb).
+If you would like more information about Route Services in Cloud Foundry, please refer to [CF dev docs](http://docs.cloudfoundry.org/services/index.html#route-services).
 
 *NOTE: This is a example only and is not for production use, but enough with the disclaimers...*
 
