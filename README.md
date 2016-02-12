@@ -32,6 +32,15 @@ $ cf push ratelimiter
 
 The rate limiter proxy app will now be running at: https://ratelimiter.bosh-lite.com.
 
+
+### Configure limit and duration
+You can also configure the limit and duration by setting the application env vars and restage:
+```
+$ cd set-env ratelimiter rate_limit 10
+$ cd set-env ratelimiter rate_duration_in_secs 60
+$ cd restage ratelimiter
+```
+
 ### Create Route Service
 The following will create a route service instance using a user-provided service and specifies the route service url (see step above).
 
