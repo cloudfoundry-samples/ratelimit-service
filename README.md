@@ -19,7 +19,7 @@ If you would like more information about Route Services in Cloud Foundry, please
 $ git clone https://github.com/cloudfoundry-samples/ratelimit-service.git
 ```
 
-Notes:
+### Assumptions
 - The examples below are using [bosh-lite](https://github.com/cloudfoundry/bosh-lite)
 - The app you would like rate limit is running at http://myapp.bosh-lite.com and running on [Diego](https://github.com/cloudfoundry-incubator/diego-release) runtime.
 
