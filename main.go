@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -13,7 +14,6 @@ import (
 const (
 	DEFAULT_PORT     = "8080"
 	CF_FORWARDED_URL = "X-Cf-Forwarded-Url"
-	REMOTE_ADDRESS   = "REMOTE_ADDR"
 	limit            = 10
 	duration         = 60 * time.Second
 )
@@ -62,7 +62,8 @@ func (r *RateLimitedRoundTripper) RoundTrip(req *http.Request) (*http.Response, 
 	var err error
 	var res *http.Response
 
-	remoteIP := req.Header.Get(REMOTE_ADDRESS)
+	remoteIP := req.RemoteAddr
+	fmt.Printf("request from [%s]\n", remoteIP)
 	if r.rateLimiter.ExceedsLimit(remoteIP) {
 		// fix this to properly return an http status of 429
 		return nil, errors.New("http 429 - too many requests")
