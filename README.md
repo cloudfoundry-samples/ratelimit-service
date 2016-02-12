@@ -37,7 +37,7 @@ The following will create a route service instance using a user-provided service
 
 ```
 $ cf create-user-provided-service ratelimiter-service -r https://ratelimiter.bosh-lite.com
-Creating user provided service ratelimiter-service in org o / space s as admin...
+Creating user provided service ratelimiter-service in org my-org / space as admin...
 OK
 ```
 
@@ -46,7 +46,7 @@ The following will create bind the application's route to the route service inst
 
 ```
 $ cf bind-route-service bosh-lite.com ratelimiter-service --hostname myapp
-Binding route myapp.bosh-lite.com to service instance ratelimiter-service in org my-org / my-space s as admin...
+Binding route myapp.bosh-lite.com to service instance ratelimiter-service in org my-org / my-space as admin...
 OK
 ```
 
