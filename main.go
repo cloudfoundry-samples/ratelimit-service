@@ -32,6 +32,8 @@ func main() {
 	limit = getEnv("rate_limit", DEFAULT_LIMIT)
 	duration = time.Duration(getEnv("rate_duration_in_secs", DEFAULT_DURATION)) * time.Second
 
+	fmt.Printf("limit [%d] duration [%v]\n", limit, duration)
+
 	log.Fatal(http.ListenAndServe(":"+getPort(), newProxy()))
 }
 
