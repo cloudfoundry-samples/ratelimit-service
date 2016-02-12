@@ -138,8 +138,8 @@ $ cf logs ratelimiter
 10:39:00.03 [RTR/0] OUT ratelimiter.bosh-lite.com - [12/02/2016:16:39:00 +0000] "HEAD / HTTP/1.1" 200 0 0 "-" "curl/7.43.0" 10.244.0.21:48239 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:3979a675-7eeb-46c9-63f5-6f5e69a374ad response_time:0.004491951 app_id:2d0e10f0-3bfc-4fe1-85d7-cc8468cecc55
 10:39:00.70 [App/0] OUT request from [10.244.0.25]
 10:39:00.71 [RTR/0] OUT ratelimiter.bosh-lite.com - [12/02/2016:16:39:00 +0000] "HEAD / HTTP/1.1" 200 0 0 "-" "curl/7.43.0" 10.244.0.21:48250 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:8d15df2d-571d-4c25-7dd5-024a86802f5e response_time:0.004477301 app_id:2d0e10f0-3bfc-4fe1-85d7-cc8468cecc55
-
 10:39:02.09 [App/0] OUT request from [10.244.0.25]
+
 10:39:02.09 [App/0] OUT rate limit exceeded for 10.244.0.25
 10:39:02.09 [RTR/0] OUT ratelimiter.bosh-lite.com - [12/02/2016:16:39:02 +0000] "HEAD / HTTP/1.1" 429 0 0 "-" "curl/7.43.0" 10.244.0.21:48274 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:78b36c9f-eaea-47c9-42f1-cb9595866cc9 response_time:0.001362549 app_id:2d0e10f0-3bfc-4fe1-85d7-cc8468cecc55
 10:39:02.98 [App/0] OUT request from [10.244.0.25]
@@ -148,6 +148,7 @@ $ cf logs ratelimiter
 10:39:05.96 [App/0] OUT request from [10.244.0.25]
 10:39:05.96 [App/0] OUT rate limit exceeded for 10.244.0.25
 10:39:05.96 [RTR/0] OUT ratelimiter.bosh-lite.com - [12/02/2016:16:39:05 +0000] "HEAD / HTTP/1.1" 429 0 0 "-" "curl/7.43.0" 10.244.0.21:48309 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:bab11bc4-ad22-44ad-4146-151b0b4c04df response_time:0.002815149 app_id:2d0e10f0-3bfc-4fe1-85d7-cc8468cecc55
+
 10:39:54.91 [App/0] OUT removing expired key [10.244.0.25]
 
 10:40:06.41 [App/0] OUT request from [10.244.0.25]
