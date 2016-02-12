@@ -8,6 +8,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -62,11 +63,12 @@ func (r *RateLimitedRoundTripper) RoundTrip(req *http.Request) (*http.Response, 
 	var err error
 	var res *http.Response
 
-	remoteIP := req.RemoteAddr
+	remoteIP := strings.Split(req.RemoteAddr, ":")[0]
+
 	fmt.Printf("request from [%s]\n", remoteIP)
 	if r.rateLimiter.ExceedsLimit(remoteIP) {
 		// fix this to properly return an http status of 429
-		return nil, errors.New("http 429 - too many requests")
+		return nil, errors.New("HTTP 429 - too many requests")
 	}
 
 	res, err = r.transport.RoundTrip(req)
