@@ -36,7 +36,7 @@ var _ = Describe("Store", func() {
 		})
 	})
 
-	Describe("Increment", func() {
+	Describe("ExpiresIn", func() {
 		BeforeEach(func() {
 			store = NewStore()
 		})

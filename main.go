@@ -1,8 +1,9 @@
 package main
 
 import (
-	"errors"
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -67,8 +68,11 @@ func (r *RateLimitedRoundTripper) RoundTrip(req *http.Request) (*http.Response, 
 
 	fmt.Printf("request from [%s]\n", remoteIP)
 	if r.rateLimiter.ExceedsLimit(remoteIP) {
-		// fix this to properly return an http status of 429
-		return nil, errors.New("HTTP 429 - too many requests")
+		resp := &http.Response{
+			StatusCode: 429,
+			Body:       ioutil.NopCloser(bytes.NewBufferString("Too many requests")),
+		}
+		return resp, nil
 	}
 
 	res, err = r.transport.RoundTrip(req)
