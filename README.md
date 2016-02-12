@@ -38,7 +38,7 @@ The following will create bind the application's route to the route service inst
 
 
 ## Testing
-To test the rate limiting, make more than 10 requests to the application within a minute. The first 10 requests will return an HTTP 200 and any subsequent requests over 10 within 60 seconds will return HTTP 429 - Too Many Requests.
+To test the rate limiting, make more than 10 requests to the application within a minute. The first 10 requests will return an **HTTP 200** and any subsequent requests over 10 within 60 seconds will return **HTTP 429 - Too Many Requests**.
 
     $ curl http://myapp.bosh-lite.com
     
