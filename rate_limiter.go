@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/cloudfoundry-samples/ratelimit-service/store"
 )
@@ -23,7 +24,7 @@ func (r *RateLimiter) ExceedsLimit(ip string) bool {
 
 	// if first request set expiry time
 	if current == 1 {
-		r.store.ExpiresIn(60, ip)
+		r.store.ExpiresIn(60*time.Second, ip)
 	}
 
 	// if exceeds limit

@@ -12,47 +12,54 @@ type Store interface {
 }
 
 type InMemoryStore struct {
-	storage map[string]*entry
+	storage map[string]*Entry
 	sync.Mutex
 }
 
-type entry struct {
-	count     int
-	createdAt time.Time
-	expiry    time.Duration
+type Entry struct {
+	count      int
+	Expirable  bool
+	ExpiryTime time.Time
+}
+
+func (e *Entry) Expired() bool {
+	if e.Expirable && time.Now().After(e.ExpiryTime) {
+		return true
+	}
+	return false
 }
 
 func NewStore() Store {
-	return &InMemoryStore{
-		storage: make(map[string]*entry),
+	store := &InMemoryStore{
+		storage: make(map[string]*Entry),
 	}
+	store.expiryCycle()
+
+	return store
 }
 
-func newEntry() *entry {
-	return &entry{
-		createdAt: time.Now(),
-		count:     0,
-	}
+func NewEntry() *Entry {
+	return &Entry{}
 }
 
 func (s *InMemoryStore) Increment(key string) int {
 	v, ok := s.get(key)
 	if !ok {
-		v = newEntry()
+		v = NewEntry()
 	}
 	v.count++
 	s.set(key, v)
 	return v.count
 }
 
-func (s *InMemoryStore) get(key string) (*entry, bool) {
+func (s *InMemoryStore) get(key string) (*Entry, bool) {
 	s.Lock()
 	defer s.Unlock()
 	v, ok := s.storage[key]
 	return v, ok
 }
 
-func (s *InMemoryStore) set(key string, value *entry) {
+func (s *InMemoryStore) set(key string, value *Entry) {
 	s.Lock()
 	defer s.Unlock()
 	s.storage[key] = value
@@ -61,10 +68,26 @@ func (s *InMemoryStore) set(key string, value *entry) {
 func (s *InMemoryStore) ExpiresIn(expireIn time.Duration, key string) {
 	v, ok := s.get(key)
 	if !ok {
-		v = newEntry()
+		v = NewEntry()
 	}
-	v.expiry = expireIn
+	v.Expirable = true
+	v.ExpiryTime = time.Now().Add(expireIn)
 	s.set(key, v)
+}
+
+func (s *InMemoryStore) expiryCycle() {
+	ticker := time.NewTicker(time.Millisecond * 500)
+	go func() {
+		for _ = range ticker.C {
+			s.Lock()
+			for k, v := range s.storage {
+				if v.Expired() {
+					delete(s.storage, k)
+				}
+			}
+			s.Unlock()
+		}
+	}()
 }
 
 func (s *InMemoryStore) CountFor(key string) int {
