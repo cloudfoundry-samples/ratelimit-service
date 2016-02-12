@@ -9,6 +9,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -16,18 +17,22 @@ import (
 const (
 	DEFAULT_PORT     = "8080"
 	CF_FORWARDED_URL = "X-Cf-Forwarded-Url"
-	limit            = 10
-	duration         = 60 * time.Second
+	DEFAULT_LIMIT    = 10
+	DEFAULT_DURATION = 60
+)
+
+var (
+	limit    int
+	duration time.Duration
 )
 
 func main() {
-	var port string
-	if port = os.Getenv("PORT"); len(port) == 0 {
-		port = DEFAULT_PORT
-	}
 	log.SetOutput(os.Stdout)
 
-	log.Fatal(http.ListenAndServe(":"+port, newProxy()))
+	limit = getEnv("rate_limit", DEFAULT_LIMIT)
+	duration = time.Duration(getEnv("rate_duration_in_secs", DEFAULT_DURATION)) * time.Second
+
+	log.Fatal(http.ListenAndServe(":"+getPort(), newProxy()))
 }
 
 func newProxy() http.Handler {
@@ -46,6 +51,30 @@ func newProxy() http.Handler {
 		Transport: newRateLimitedRoundTripper(),
 	}
 	return proxy
+}
+
+func getPort() string {
+	var port string
+	if port = os.Getenv("PORT"); len(port) == 0 {
+		port = DEFAULT_PORT
+	}
+	return port
+}
+
+func getEnv(env string, defaultValue int) int {
+	var (
+		v      string
+		config int
+	)
+	if v = os.Getenv(env); len(v) == 0 {
+		return defaultValue
+	}
+
+	config, err := strconv.Atoi(v)
+	if err != nil {
+		return defaultValue
+	}
+	return config
 }
 
 type RateLimitedRoundTripper struct {
