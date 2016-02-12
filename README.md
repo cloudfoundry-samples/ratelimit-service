@@ -34,10 +34,16 @@ The rate limiter proxy app will now be running at: https://ratelimiter.bosh-lite
 
 
 ### Configure limit and duration
-You can also configure the limit and duration by setting the application env vars and restage:
+To override the default limit (10) and duration in seconds (60), you can set the following application env vars and restage:
 ```
-$ cd set-env ratelimiter rate_limit 10
 $ cd set-env ratelimiter rate_duration_in_secs 60
+$ cd set-env ratelimiter rate_limit 10
+$ cf env ratelimiter
+
+User-Provided:
+rate_duration_in_secs: 60
+rate_limit: 10
+
 $ cd restage ratelimiter
 ```
 
