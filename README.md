@@ -113,6 +113,10 @@ OK
 ### Logs
 You can watch the logs of the rate limiter app to see when requests come it for given IP addresses, as well as when IP address key has expired (i.e. its ok to make more requests)
 
+For example, when using
+- rate_duration_in_secs: 30
+- rate_limit: 20
+
 ```
 $ cf logs ratelimiter
 
