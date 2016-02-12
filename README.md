@@ -15,7 +15,9 @@ If you would like more information about Route Services in Cloud Foundry, please
 - CF CLI v6.15+
 - an app deployed and running on Cloud Foundry you want to rate limit
 - this rate limiter app
-      $ git clone https://github.com/cloudfoundry-samples/ratelimit-service.git
+```
+$ git clone https://github.com/cloudfoundry-samples/ratelimit-service.git
+```
 
 Notes:
 - The examples below are using [bosh-lite](https://github.com/cloudfoundry/bosh-lite)
