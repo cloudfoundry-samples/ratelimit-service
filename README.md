@@ -66,7 +66,7 @@ OK
 ```
 
 
-## Testing
+## Try it out
 To test the rate limiting, make more than 10 requests to the application within a minute. The first 10 requests will return an [HTTP 200](https://httpstatuses.com/200) and any subsequent requests over 10 within 60 seconds will return [HTTP 429 - Too Many Requests](https://httpstatuses.com/429).
 
 ```
@@ -108,4 +108,27 @@ cf unbind-route-service bosh-lite.com ratelimiter-service --hostname myapp
 Unbinding may leave apps mapped to route myapp.bosh-lite.com vulnerable; e.g. if service instance ratelimiter-service provides authentication. Do you want to proceed?> yes
 Unbinding route myapp.bosh-lite.com from service instance ratelimiter-service in org my-org / space my-space as admin...
 OK
+```
+
+### Logs
+You can watch the logs of the rate limiter app to see when requests come it for given IP addresses, as well as when IP address key has expired (i.e. its ok to make more requests)
+
+```
+$ cf logs ratelimiter
+
+2016-02-12T10:25:00.49-0600 [App/0]      OUT request from [10.244.0.25]
+2016-02-12T10:25:00.49-0600 [RTR/0]      OUT ratelimiter.bosh-lite.com - [12/02/2016:16:25:00 +0000] "HEAD / HTTP/1.1" 200 0 0 "-" "curl/7.43.0" 10.244.0.21:42192 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:78ebcf18-c546-4d9c-6378-99bf289bb755 response_time:0.004258194 app_id:bfd43944-ae2a-4c65-9ea3-f2aecd390ac1
+2016-02-12T10:25:00.78-0600 [App/0]      OUT request from [10.244.0.25]
+2016-02-12T10:25:00.80-0600 [RTR/0]      OUT ratelimiter.bosh-lite.com - [12/02/2016:16:25:00 +0000] "HEAD / HTTP/1.1" 200 0 0 "-" "curl/7.43.0" 10.244.0.21:42198 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:a46616d2-af63-49a3-42ee-f5a8aff4e801 response_time:0.008349286 app_id:bfd43944-ae2a-4c65-9ea3-f2aecd390ac1
+2016-02-12T10:25:01.00-0600 [App/0]      OUT request from [10.244.0.25]
+2016-02-12T10:25:01.00-0600 [RTR/0]      OUT ratelimiter.bosh-lite.com - [12/02/2016:16:25:00 +0000] "HEAD / HTTP/1.1" 200 0 0 "-" "curl/7.43.0" 10.244.0.21:42205 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:58a9477f-f59e-4453-61f4-4ef257ecadf4 response_time:0.00661315 app_id:bfd43944-ae2a-4c65-9ea3-f2aecd390ac1
+2016-02-12T10:25:01.29-0600 [App/0]      OUT request from [10.244.0.25]
+
+2016-02-12T10:25:01.29-0600 [App/0]      OUT rate limit exceeded for 10.244.0.25
+2016-02-12T10:25:01.29-0600 [RTR/0]      OUT ratelimiter.bosh-lite.com - [12/02/2016:16:25:01 +0000] "HEAD / HTTP/1.1" 429 0 0 "-" "curl/7.43.0" 10.244.0.21:42216 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:b60d0ea1-603f-4a92-6158-e034f3017b41 response_time:0.002778094 app_id:bfd43944-ae2a-4c65-9ea3-f2aecd390ac1
+2016-02-12T10:25:02.73-0600 [App/0]      OUT request from [10.244.0.25]
+2016-02-12T10:25:02.73-0600 [App/0]      OUT rate limit exceeded for 10.244.0.25
+2016-02-12T10:25:02.73-0600 [RTR/0]      OUT ratelimiter.bosh-lite.com - [12/02/2016:16:25:02 +0000] "HEAD / HTTP/1.1" 429 0 0 "-" "curl/7.43.0" 10.244.0.21:42250 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:33600a1c-5b4a-4067-5617-82cb140c95d6 response_time:0.001626862 app_id:bfd43944-ae2a-4c65-9ea3-f2aecd390ac1
+2016-02-12T10:25:47.17-0600 [App/0]      OUT removing expired key [10.244.0.25]
+
 ```
