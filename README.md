@@ -12,7 +12,7 @@ If you would like more information about Route Services in Cloud Foundry, please
 
 ## Prerequisites
 - A Cloud Foundry and Diego deployment
-- CF CLI v6.15+
+- CF CLI v6.16+
 - an app deployed and running on Cloud Foundry you want to rate limit
 - this rate limiter app
 ```
