@@ -155,3 +155,24 @@ $ cf logs ratelimiter
 
 
 ```
+
+## Misc
+The rate limit app also has a `/stats` endpoint that displays the current list of IPs and counts, which can be useful for debugging or displaying current stats
+
+
+```
+curl ratelimiter.bosh-lite.com/stats
+```
+
+```json
+[
+  {
+    "Ip": "10.244.0.25",
+    "Count": 3
+  },
+  {
+    "Ip": "10.244.0.29",
+    "Count": 2
+  }
+]
+```
