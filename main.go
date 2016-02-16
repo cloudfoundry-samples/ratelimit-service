@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -22,8 +23,9 @@ const (
 )
 
 var (
-	limit    int
-	duration time.Duration
+	limit       int
+	duration    time.Duration
+	rateLimiter *RateLimiter
 )
 
 func main() {
@@ -34,7 +36,11 @@ func main() {
 
 	fmt.Printf("limit [%d] duration [%v]\n", limit, duration)
 
-	log.Fatal(http.ListenAndServe(":"+getPort(), newProxy()))
+	rateLimiter = NewRateLimiter(limit, duration)
+
+	http.HandleFunc("/stats", statsHandler)
+	http.Handle("/", newProxy())
+	log.Fatal(http.ListenAndServe(":"+getPort(), nil))
 }
 
 func newProxy() http.Handler {
@@ -53,6 +59,14 @@ func newProxy() http.Handler {
 		Transport: newRateLimitedRoundTripper(),
 	}
 	return proxy
+}
+
+func statsHandler(w http.ResponseWriter, r *http.Request) {
+	stats, err := json.Marshal(rateLimiter.GetStats())
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	fmt.Fprintf(w, string(stats))
 }
 
 func getPort() string {
@@ -86,7 +100,7 @@ type RateLimitedRoundTripper struct {
 
 func newRateLimitedRoundTripper() *RateLimitedRoundTripper {
 	return &RateLimitedRoundTripper{
-		rateLimiter: NewRateLimiter(limit, duration),
+		rateLimiter: rateLimiter,
 		transport:   http.DefaultTransport,
 	}
 }

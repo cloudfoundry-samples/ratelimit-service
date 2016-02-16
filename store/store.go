@@ -11,6 +11,7 @@ type Store interface {
 	Increment(string) int
 	ExpiresIn(time.Duration, string)
 	CountFor(string) int
+	Current() map[string]int
 }
 
 // in-memory store is a simple map-backed key store
@@ -100,4 +101,14 @@ func (s *InMemoryStore) CountFor(key string) int {
 		return 0
 	}
 	return v.count
+}
+
+func (s *InMemoryStore) Current() map[string]int {
+	m := make(map[string]int)
+	s.Lock()
+	for k, v := range s.storage {
+		m[k] = v.count
+	}
+	s.Unlock()
+	return m
 }

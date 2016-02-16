@@ -40,4 +40,28 @@ var _ = Describe("RateLimiter", func() {
 		})
 	})
 
+	Describe("Stats", func() {
+		BeforeEach(func() {
+			limit = 10
+			duration = 5 * time.Second
+			limiter = NewRateLimiter(limit, duration)
+		})
+
+		It("reports stats ", func() {
+
+			for i := 5; i < limit; i++ {
+				ip := "192.168.1.100"
+				Expect(limiter.ExceedsLimit(ip)).To(BeFalse())
+			}
+			for i := 7; i < limit; i++ {
+				ip := "192.168.1.101"
+				Expect(limiter.ExceedsLimit(ip)).To(BeFalse())
+			}
+
+			stats := limiter.GetStats()
+			Expect(len(stats)).To(Equal(2))
+		})
+
+	})
+
 })

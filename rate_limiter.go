@@ -7,6 +7,12 @@ import (
 	"github.com/cloudfoundry-samples/ratelimit-service/store"
 )
 
+type Stats []Stat
+type Stat struct {
+	Ip    string
+	Count int
+}
+
 type RateLimiter struct {
 	limit    int
 	duration time.Duration
@@ -30,10 +36,21 @@ func (r *RateLimiter) ExceedsLimit(ip string) bool {
 	}
 
 	// if exceeds limit
-	if current > limit {
+	if current > r.limit {
 		fmt.Printf("rate limit exceeded for %s\n", ip)
 		return true
 	}
 
 	return false
+}
+
+func (r *RateLimiter) GetStats() Stats {
+	s := Stats{}
+	for k, v := range r.store.Current() {
+		s = append(s, Stat{
+			Ip:    k,
+			Count: v,
+		})
+	}
+	return s
 }
