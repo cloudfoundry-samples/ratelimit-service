@@ -161,7 +161,7 @@ The rate limit app also has a `/stats` endpoint that displays the current list o
 
 
 ```
-curl ratelimiter.bosh-lite.com/stats
+$ curl ratelimiter.bosh-lite.com/stats
 ```
 
 ```json
