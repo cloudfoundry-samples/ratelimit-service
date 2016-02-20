@@ -17,7 +17,7 @@ import (
 const (
 	DEFAULT_PORT     = "8080"
 	CF_FORWARDED_URL = "X-Cf-Forwarded-Url"
-	DEFAULT_LIMIT    = 1
+	DEFAULT_LIMIT    = 10
 )
 
 var (

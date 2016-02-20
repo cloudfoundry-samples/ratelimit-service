@@ -9,8 +9,8 @@ import (
 
 type Stats []Stat
 type Stat struct {
-	Ip        string
-	Available int
+	Ip        string `json:"ip"`
+	Available int    `json:"available"`
 }
 
 type RateLimiter struct {

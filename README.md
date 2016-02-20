@@ -3,8 +3,8 @@
 ## About
 A simple in-memory rate limiting route service for Cloud Foundry.
 
-This rate limiter route service app is a forwarding proxy that will limit the number of requests per second for a given client IP.
-For example, maximum 5 requests per second.
+This rate limiter route service app is a forwarding proxy that will limit the number of requests/second per client IP address.
+For example, maximum 10 requests per second per client.
 
 If you would like more information about Route Services in Cloud Foundry, please refer to [CF dev docs](http://docs.cloudfoundry.org/services/index.html#route-services).
 
@@ -65,16 +65,63 @@ OK
 
 
 ## Try it out
-To test the rate limiting, make more than 1 requests / sec to the application. The first request within a second will return an [HTTP 200](https://httpstatuses.com/200) and any subsequent requests over the limit will return [HTTP 429 - Too Many Requests](https://httpstatuses.com/429).
+To test the rate limiting, you will need to exceed the requests / second.
+- requests made that are within the limit will return an [HTTP 200](https://httpstatuses.com/200)
+- requests made that exceed the limit will return an [HTTP 429 - Too Many Requests](https://httpstatuses.com/429)
+
+**In the examples below we will use a rate limit of 10 requests / per second.**
+
+
+### Client-side tool
+There is a great command line tool (similar to Apache Bench) called [boom](https://github.com/rakyll/boo://github.com/rakyll/boom) which can send a number of concurrent requests and also allow you to throttle the number of concurrent client requests.
+
+To install client side load testing tool:
+```
+go get github.com/rakyll/boom
+```
+
+### Example (not exceeding rate limit)
+For example: 100 requests, 10 concurrently and a QPS of 10
 
 ```
-$ curl -I myapp.bosh-lite.com
-HTTP/1.1 200 OK
-$ curl -I myapp.bosh-lite.com
-HTTP/1.1 429 Too Many Requests
-. . .
+$ boom -n 100 -c 10 -q 10 http://myapp.bosh-lite.com
+100 / 100 Boooooooooooooooooooooooooooooooooooooooooooooooooooooooooo! 100.00 %
+
+Summary:
+  Total:        10.1374 secs.
+  Slowest:      0.7535 secs.
+  Fastest:      0.0233 secs.
+  Average:      0.1478 secs.
+  Requests/sec: 9.8644
+  Total Data Received:  2500 bytes.
+  Response Size per Request:    25 bytes.
+
+Status code distribution:
+  [200] 100 responses
 ```
 
+### Example (exceeding rate limit)
+For example: 100 requests, 12 concurrently and a QPS of 12
+
+In this example, since we will be sending 12 requests / sec, then only roughly 84% of the requests should be successful.
+
+
+```
+$ boom -n 100 -c 12 -q 12 http://myapp.bosh-lite.com
+100 / 100 Boooooooooooooooooooooooooooooooooooooooooooooooooooooooooo! 100.00 %
+Summary:
+  Total:        8.3826 secs.
+  Slowest:      0.6653 secs.
+  Fastest:      0.0352 secs.
+  Average:      0.1126 secs.
+  Requests/sec: 11.9295
+  Total Data Received:  2388 bytes.
+  Response Size per Request:    23 bytes.
+
+Status code distribution:
+  [200] 86 responses
+  [429] 14 responses
+```
 
 
 ### Unbinding Route Service
@@ -93,49 +140,38 @@ You can watch the logs of the rate limiter app to see when requests come it for 
 
 ```
 $ cf logs ratelimiter
-
-10:38:26.42 [App/0] OUT limit [10]
-
-10:38:54.86 [App/0] OUT request from [10.244.0.25]
-10:38:55.05 [RTR/0] OUT ratelimiter.bosh-lite.com - [12/02/2016:16:38:54 +0000] "HEAD / HTTP/1.1" 200 0 0 "-" "curl/7.43.0" 10.244.0.21:48163 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:384012cd-dacc-49b5-72dc-0004c65aad56 response_time:0.196000975 app_id:2d0e10f0-3bfc-4fe1-85d7-cc8468cecc55
-10:38:56.22 [App/0] OUT request from [10.244.0.25]
-10:38:56.23 [RTR/0] OUT ratelimiter.bosh-lite.com - [12/02/2016:16:38:56 +0000] "HEAD / HTTP/1.1" 200 0 0 "-" "curl/7.43.0" 10.244.0.21:48177 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:35516cdb-8e70-4f36-6c97-8eb977df1b1d response_time:0.004578871 app_id:2d0e10f0-3bfc-4fe1-85d7-cc8468cecc55
-10:38:57.00 [App/0] OUT request from [10.244.0.25]
-10:38:57.01 [RTR/0] OUT ratelimiter.bosh-lite.com - [12/02/2016:16:38:57 +0000] "HEAD / HTTP/1.1" 200 0 0 "-" "curl/7.43.0" 10.244.0.21:48189 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:7dc01bbe-4edf-436f-50a9-7d660a7eeb9d response_time:0.005896061 app_id:2d0e10f0-3bfc-4fe1-85d7-cc8468cecc55
-10:38:57.44 [App/0] OUT request from [10.244.0.25]
-10:38:57.45 [RTR/0] OUT ratelimiter.bosh-lite.com - [12/02/2016:16:38:57 +0000] "HEAD / HTTP/1.1" 200 0 0 "-" "curl/7.43.0" 10.244.0.21:48199 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:91d9d0fd-108f-4536-48a9-d8f3e9018580 response_time:0.005916887 app_id:2d0e10f0-3bfc-4fe1-85d7-cc8468cecc55
-10:38:57.91 [App/0] OUT request from [10.244.0.25]
-10:38:57.91 [RTR/0] OUT ratelimiter.bosh-lite.com - [12/02/2016:16:38:57 +0000] "HEAD / HTTP/1.1" 200 0 0 "-" "curl/7.43.0" 10.244.0.21:48206 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:879023c6-7d18-4258-6d8b-a5948e3b6e99 response_time:0.004543364 app_id:2d0e10f0-3bfc-4fe1-85d7-cc8468cecc55
-10:38:58.36 [App/0] OUT request from [10.244.0.25]
-10:38:58.37 [RTR/0] OUT ratelimiter.bosh-lite.com - [12/02/2016:16:38:58 +0000] "HEAD / HTTP/1.1" 200 0 0 "-" "curl/7.43.0" 10.244.0.21:48213 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:c1089f0d-8af6-483c-7f19-a2ccdb7612ea response_time:0.004303727 app_id:2d0e10f0-3bfc-4fe1-85d7-cc8468cecc55
-10:38:58.86 [App/0] OUT request from [10.244.0.25]
-10:38:58.86 [RTR/0] OUT ratelimiter.bosh-lite.com - [12/02/2016:16:38:58 +0000] "HEAD / HTTP/1.1" 200 0 0 "-" "curl/7.43.0" 10.244.0.21:48222 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:540b94b8-1c54-4e46-403a-0ad2411a2ece response_time:0.004490439 app_id:2d0e10f0-3bfc-4fe1-85d7-cc8468cecc55
-10:38:59.37 [App/0] OUT request from [10.244.0.25]
-10:38:59.37 [RTR/0] OUT ratelimiter.bosh-lite.com - [12/02/2016:16:38:59 +0000] "HEAD / HTTP/1.1" 200 0 0 "-" "curl/7.43.0" 10.244.0.21:48231 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:3b266ca5-329b-4b73-6c1c-12deb3005452 response_time:0.005246971 app_id:2d0e10f0-3bfc-4fe1-85d7-cc8468cecc55
-10:39:00.02 [App/0] OUT request from [10.244.0.25]
-10:39:00.03 [RTR/0] OUT ratelimiter.bosh-lite.com - [12/02/2016:16:39:00 +0000] "HEAD / HTTP/1.1" 200 0 0 "-" "curl/7.43.0" 10.244.0.21:48239 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:3979a675-7eeb-46c9-63f5-6f5e69a374ad response_time:0.004491951 app_id:2d0e10f0-3bfc-4fe1-85d7-cc8468cecc55
-10:39:00.70 [App/0] OUT request from [10.244.0.25]
-10:39:00.71 [RTR/0] OUT ratelimiter.bosh-lite.com - [12/02/2016:16:39:00 +0000] "HEAD / HTTP/1.1" 200 0 0 "-" "curl/7.43.0" 10.244.0.21:48250 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:8d15df2d-571d-4c25-7dd5-024a86802f5e response_time:0.004477301 app_id:2d0e10f0-3bfc-4fe1-85d7-cc8468cecc55
-10:39:02.09 [App/0] OUT request from [10.244.0.25]
-
-10:39:02.09 [App/0] OUT rate limit exceeded for 10.244.0.25
-10:39:02.09 [RTR/0] OUT ratelimiter.bosh-lite.com - [12/02/2016:16:39:02 +0000] "HEAD / HTTP/1.1" 429 0 0 "-" "curl/7.43.0" 10.244.0.21:48274 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:78b36c9f-eaea-47c9-42f1-cb9595866cc9 response_time:0.001362549 app_id:2d0e10f0-3bfc-4fe1-85d7-cc8468cecc55
-10:39:02.98 [App/0] OUT request from [10.244.0.25]
-10:39:02.98 [App/0] OUT rate limit exceeded for 10.244.0.25
-10:39:02.98 [RTR/0] OUT ratelimiter.bosh-lite.com - [12/02/2016:16:39:02 +0000] "HEAD / HTTP/1.1" 429 0 0 "-" "curl/7.43.0" 10.244.0.21:48284 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:5004bb5b-a716-4a13-61f8-21ae0ec4572b response_time:0.001353071 app_id:2d0e10f0-3bfc-4fe1-85d7-cc8468cecc55
-10:39:05.96 [App/0] OUT request from [10.244.0.25]
-10:39:05.96 [App/0] OUT rate limit exceeded for 10.244.0.25
-10:39:05.96 [RTR/0] OUT ratelimiter.bosh-lite.com - [12/02/2016:16:39:05 +0000] "HEAD / HTTP/1.1" 429 0 0 "-" "curl/7.43.0" 10.244.0.21:48309 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:bab11bc4-ad22-44ad-4146-151b0b4c04df response_time:0.002815149 app_id:2d0e10f0-3bfc-4fe1-85d7-cc8468cecc55
-
-10:39:54.91 [App/0] OUT removing expired key [10.244.0.25]
-
-10:40:06.41 [App/0] OUT request from [10.244.0.25]
-
+14:16:20.49-0600 [App/0]  OUT request from [10.244.0.25]
+14:16:20.49-0600 [App/0]  OUT request from [10.244.0.25]
+14:16:20.49-0600 [App/0]  OUT request from [10.244.0.25]
+14:16:20.49-0600 [App/0]  OUT request from [10.244.0.25]
+14:16:20.49-0600 [App/0]  OUT request from [10.244.0.25]
+14:16:20.49-0600 [App/0]  OUT request from [10.244.0.25]
+14:16:20.49-0600 [App/0]  OUT request from [10.244.0.25]
+14:16:20.49-0600 [App/0]  OUT request from [10.244.0.25]
+14:16:20.49-0600 [App/0]  OUT request from [10.244.0.25]
+14:16:20.49-0600 [App/0]  OUT request from [10.244.0.25]
+14:16:20.50-0600 [RTR/0]  OUT ratelimiter.bosh-lite.com - [20/02/2016:20:16:20 +0000] "GET / HTTP/1.1" 200 0 25 "-" "Go-http-client/1.1" 10.244.0.21:38101 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:127716be-9cd7-484d-634c-d1051993accb response_time:0.013694649 app_id:7a1745bc-d7cb-43a3-8201-c6ac5d75e79c
+14:16:20.51-0600 [RTR/0]  OUT ratelimiter.bosh-lite.com - [20/02/2016:20:16:20 +0000] "GET / HTTP/1.1" 200 0 25 "-" "Go-http-client/1.1" 10.244.0.21:38102 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:cf60dc83-bff1-4e53-6ff7-43a52667e2a4 response_time:0.017450561 app_id:7a1745bc-d7cb-43a3-8201-c6ac5d75e79c
+14:16:20.52-0600 [RTR/0]  OUT ratelimiter.bosh-lite.com - [20/02/2016:20:16:20 +0000] "GET / HTTP/1.1" 200 0 25 "-" "Go-http-client/1.1" 10.244.0.21:38109 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:272a34cc-dcaa-4c13-5584-be28e25855a2 response_time:0.027553184 app_id:7a1745bc-d7cb-43a3-8201-c6ac5d75e79c
+14:16:20.52-0600 [RTR/0]  OUT ratelimiter.bosh-lite.com - [20/02/2016:20:16:20 +0000] "GET / HTTP/1.1" 200 0 25 "-" "Go-http-client/1.1" 10.244.0.21:38107 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:6c379238-d5fc-4fc5-7b27-e4776d830c41 response_time:0.029788514 app_id:7a1745bc-d7cb-43a3-8201-c6ac5d75e79c
+14:16:20.53-0600 [RTR/0]  OUT ratelimiter.bosh-lite.com - [20/02/2016:20:16:20 +0000] "GET / HTTP/1.1" 200 0 25 "-" "Go-http-client/1.1" 10.244.0.21:38106 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:2efdd43d-3429-4869-54f6-634cb4bc9854 response_time:0.038401721 app_id:7a1745bc-d7cb-43a3-8201-c6ac5d75e79c
+14:16:20.53-0600 [RTR/0]  OUT ratelimiter.bosh-lite.com - [20/02/2016:20:16:20 +0000] "GET / HTTP/1.1" 200 0 25 "-" "Go-http-client/1.1" 10.244.0.21:38103 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:2f059c95-31b9-42ab-4459-1fe0f54dc9fa response_time:0.038841171 app_id:7a1745bc-d7cb-43a3-8201-c6ac5d75e79c
+14:16:20.54-0600 [RTR/0]  OUT ratelimiter.bosh-lite.com - [20/02/2016:20:16:20 +0000] "GET / HTTP/1.1" 200 0 25 "-" "Go-http-client/1.1" 10.244.0.21:38108 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:950c9525-490a-4fd1-7b38-5f74514ea085 response_time:0.046893267 app_id:7a1745bc-d7cb-43a3-8201-c6ac5d75e79c
+14:16:20.55-0600 [RTR/0]  OUT ratelimiter.bosh-lite.com - [20/02/2016:20:16:20 +0000] "GET / HTTP/1.1" 200 0 25 "-" "Go-http-client/1.1" 10.244.0.21:38104 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:49c5650b-c511-4fe5-7f56-067e404d7b8b response_time:0.059563104 app_id:7a1745bc-d7cb-43a3-8201-c6ac5d75e79c
+14:16:20.55-0600 [RTR/0]  OUT ratelimiter.bosh-lite.com - [20/02/2016:20:16:20 +0000] "GET / HTTP/1.1" 200 0 25 "-" "Go-http-client/1.1" 10.244.0.21:38105 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:de96c743-032f-4977-4466-f9241a03cf6a response_time:0.063431108 app_id:7a1745bc-d7cb-43a3-8201-c6ac5d75e79c
+14:16:20.56-0600 [RTR/0]  OUT ratelimiter.bosh-lite.com - [20/02/2016:20:16:20 +0000] "GET / HTTP/1.1" 200 0 25 "-" "Go-http-client/1.1" 10.244.0.21:38111 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:081cb579-a038-4511-43e9-b8f2074019b9 response_time:0.070817607 app_id:7a1745bc-d7cb-43a3-8201-c6ac5d75e79c
+14:16:20.64-0600 [App/0]  OUT request from [10.244.0.25]
+14:16:20.64-0600 [App/0]  OUT request from [10.244.0.25]
+14:16:20.64-0600 [App/0]  OUT rate limit exceeded for 10.244.0.25
+14:16:20.64-0600 [RTR/0]  OUT ratelimiter.bosh-lite.com - [20/02/2016:20:16:20 +0000] "GET / HTTP/1.1" 429 0 17 "-" "Go-http-client/1.1" 10.244.0.21:38144 x_forwarded_for:
 
 ```
 
 ## Misc
-The rate limit app also has a `/stats` endpoint that displays the current list of IPs and counts, which can be useful for debugging or displaying current stats
+The rate limit app also has a `/stats` endpoint that displays the current list of IPs and available requests, which can be useful for debugging or displaying current stats.
+For example, if the limit is set to 10 and there are 3 available, then it means that there can only be 3 more requests made per second until the limit is exceeded.
+If the available number is zero, then it means the rate limit has been exceeded for the client IP.
+
 
 
 ```
@@ -145,12 +181,12 @@ $ curl ratelimiter.bosh-lite.com/stats
 ```json
 [
   {
-    "Ip": "10.244.0.25",
-    "Count": 3
+    "ip": "10.244.0.25",
+    "available": 3
   },
   {
-    "Ip": "10.244.0.29",
-    "Count": 2
+    "ip": "10.244.0.29",
+    "available": 0
   }
 ]
 ```
