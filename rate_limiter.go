@@ -9,34 +9,23 @@ import (
 
 type Stats []Stat
 type Stat struct {
-	Ip    string
-	Count int
+	Ip        string
+	Available int
 }
 
 type RateLimiter struct {
-	limit    int
 	duration time.Duration
 	store    store.Store
 }
 
-func NewRateLimiter(limit int, duration time.Duration) *RateLimiter {
+func NewRateLimiter(limit int) *RateLimiter {
 	return &RateLimiter{
-		limit:    limit,
-		duration: duration,
-		store:    store.NewStore(),
+		store: store.NewStore(limit),
 	}
 }
 
 func (r *RateLimiter) ExceedsLimit(ip string) bool {
-	current := r.store.Increment(ip)
-
-	// if first request set expiry time
-	if current == 1 {
-		r.store.ExpiresIn(r.duration, ip)
-	}
-
-	// if exceeds limit
-	if current > r.limit {
+	if _, err := r.store.Increment(ip); err != nil {
 		fmt.Printf("rate limit exceeded for %s\n", ip)
 		return true
 	}
@@ -46,10 +35,10 @@ func (r *RateLimiter) ExceedsLimit(ip string) bool {
 
 func (r *RateLimiter) GetStats() Stats {
 	s := Stats{}
-	for k, v := range r.store.Current() {
+	for k, v := range r.store.Stats() {
 		s = append(s, Stat{
-			Ip:    k,
-			Count: v,
+			Ip:        k,
+			Available: v,
 		})
 	}
 	return s

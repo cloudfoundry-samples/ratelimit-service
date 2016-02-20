@@ -1,8 +1,6 @@
 package store_test
 
 import (
-	"time"
-
 	. "github.com/cloudfoundry-samples/ratelimit-service/store"
 
 	. "github.com/onsi/ginkgo"
@@ -12,64 +10,26 @@ import (
 var _ = Describe("Store", func() {
 	var (
 		store Store
+		limit int
 	)
 
 	Describe("Increment", func() {
 		BeforeEach(func() {
-			store = NewStore()
+			limit = 10
+			store = NewStore(limit)
 		})
 
-		It("increments", func() {
-			for i := 1; i < 11; i++ {
-				count := store.Increment("foo")
-				Expect(count).To(Equal(i))
+		It("shows available", func() {
+			for i := 1; i < limit+1; i++ {
+				avail, err := store.Increment("foo")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(avail).To(Equal(limit - i))
 			}
-
-			for i := 1; i < 16; i++ {
-				count := store.Increment("bar")
-				Expect(count).To(Equal(i))
-			}
-
-			Expect(store.CountFor("foo")).To(Equal(10))
-			Expect(store.CountFor("bar")).To(Equal(15))
+			avail, err := store.Increment("foo")
+			Expect(err).To(HaveOccurred())
+			Expect(avail).To(Equal(0))
 
 		})
 	})
 
-	Describe("ExpiresIn", func() {
-		BeforeEach(func() {
-			store = NewStore()
-		})
-
-		It("expires keys", func() {
-			count := store.Increment("foo")
-			Expect(count).To(Equal(1))
-			Expect(store.CountFor("foo")).To(Equal(1))
-
-			store.ExpiresIn(50*time.Millisecond, "foo")
-			time.Sleep(1 * time.Second)
-			Expect(store.CountFor("foo")).To(Equal(0))
-		})
-	})
-
-})
-var _ = Describe("Entry", func() {
-
-	Context("new entry", func() {
-		It("should not be expired", func() {
-			entry := NewEntry()
-			Expect(entry.Expired()).To(BeFalse())
-		})
-	})
-
-	Context("entry with expire time", func() {
-		It("should be considered expired", func() {
-			entry := NewEntry()
-			Expect(entry.Expired()).To(BeFalse())
-
-			entry.Expirable = true
-			entry.ExpiryTime = time.Now()
-			Eventually(entry.Expired()).Should(BeTrue())
-		})
-	})
 })

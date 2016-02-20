@@ -1,82 +1,80 @@
 package store
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/juju/ratelimit"
 )
 
-// store represents a key/value storage with counter and expiry of keys
+const expireInSecs = 30 * time.Second
+
 type Store interface {
-	Increment(string) int
-	ExpiresIn(time.Duration, string)
-	CountFor(string) int
-	Current() map[string]int
+	Increment(string) (int, error)
+	Stats() map[string]int
 }
 
-// in-memory store is a simple map-backed key store
 type InMemoryStore struct {
-	storage map[string]*Entry
+	limit   int
+	storage map[string]*entry
 	sync.RWMutex
 }
 
-type Entry struct {
-	count      int
-	Expirable  bool
-	ExpiryTime time.Time
+type entry struct {
+	bucket    *ratelimit.Bucket
+	updatedAt time.Time
 }
 
-func (e *Entry) Expired() bool {
-	if e.Expirable && time.Now().After(e.ExpiryTime) {
-		return true
-	}
-	return false
+func (e *entry) Expired() bool {
+	return time.Now().After(e.updatedAt.Add(expireInSecs))
 }
 
-func NewStore() Store {
+func NewStore(limit int) Store {
 	store := &InMemoryStore{
-		storage: make(map[string]*Entry),
+		limit:   limit,
+		storage: make(map[string]*entry),
 	}
 	store.expiryCycle()
 
 	return store
 }
 
-func NewEntry() *Entry {
-	return &Entry{}
+func newEntry(limit int) *entry {
+	fillRatePerSec := 1000 / limit
+	return &entry{
+		bucket: ratelimit.NewBucket(time.Duration(fillRatePerSec)*time.Millisecond, int64(limit)),
+	}
 }
 
-func (s *InMemoryStore) Increment(key string) int {
+func (s *InMemoryStore) Increment(key string) (int, error) {
 	v, ok := s.get(key)
 	if !ok {
-		v = NewEntry()
+		v = newEntry(s.limit)
 	}
-	v.count++
+	if avail := v.bucket.Available(); avail == 0 {
+		v.updatedAt = time.Now()
+		s.set(key, v)
+		return int(avail), errors.New("empty bucket")
+	}
+	v.bucket.Take(1)
+	v.updatedAt = time.Now()
 	s.set(key, v)
-	return v.count
+	return int(v.bucket.Available()), nil
 }
 
-func (s *InMemoryStore) get(key string) (*Entry, bool) {
+func (s *InMemoryStore) get(key string) (*entry, bool) {
 	s.RLock()
 	defer s.RUnlock()
 	v, ok := s.storage[key]
 	return v, ok
 }
 
-func (s *InMemoryStore) set(key string, value *Entry) {
+func (s *InMemoryStore) set(key string, value *entry) {
 	s.Lock()
 	defer s.Unlock()
 	s.storage[key] = value
-}
-
-func (s *InMemoryStore) ExpiresIn(expireIn time.Duration, key string) {
-	v, ok := s.get(key)
-	if !ok {
-		v = NewEntry()
-	}
-	v.Expirable = true
-	v.ExpiryTime = time.Now().Add(expireIn)
-	s.set(key, v)
 }
 
 func (s *InMemoryStore) expiryCycle() {
@@ -95,19 +93,19 @@ func (s *InMemoryStore) expiryCycle() {
 	}()
 }
 
-func (s *InMemoryStore) CountFor(key string) int {
+func (s *InMemoryStore) Available(key string) int {
 	v, ok := s.get(key)
 	if !ok {
 		return 0
 	}
-	return v.count
+	return int(v.bucket.Available())
 }
 
-func (s *InMemoryStore) Current() map[string]int {
+func (s *InMemoryStore) Stats() map[string]int {
 	m := make(map[string]int)
 	s.Lock()
 	for k, v := range s.storage {
-		m[k] = v.count
+		m[k] = int(v.bucket.Available())
 	}
 	s.Unlock()
 	return m

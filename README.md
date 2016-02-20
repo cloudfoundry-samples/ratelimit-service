@@ -3,8 +3,8 @@
 ## About
 A simple in-memory rate limiting route service for Cloud Foundry.
 
-This rate limiter route service app is a forwarding proxy that will limit the number of requests for a given client IP for a given duration.
-For example, maximum 10 requests per minute.
+This rate limiter route service app is a forwarding proxy that will limit the number of requests per second for a given client IP.
+For example, maximum 5 requests per second.
 
 If you would like more information about Route Services in Cloud Foundry, please refer to [CF dev docs](http://docs.cloudfoundry.org/services/index.html#route-services).
 
@@ -33,15 +33,13 @@ $ cf push ratelimiter
 The rate limiter proxy app will now be running at: https://ratelimiter.bosh-lite.com.
 
 
-#### Configure limit and duration
-To override the default limit (10) and duration in seconds (60), you can set the following application env vars and restage:
+#### Configure limit of requests per second
+To override the default limit (1), you can set the following application env var and restage:
 ```
-$ cd set-env ratelimiter rate_duration_in_secs 60
 $ cd set-env ratelimiter rate_limit 10
 $ cf env ratelimiter
 
 User-Provided:
-rate_duration_in_secs: 60
 rate_limit: 10
 
 $ cd restage ratelimiter
@@ -67,31 +65,11 @@ OK
 
 
 ## Try it out
-To test the rate limiting, make more than 10 requests to the application within a minute. The first 10 requests will return an [HTTP 200](https://httpstatuses.com/200) and any subsequent requests over 10 within 60 seconds will return [HTTP 429 - Too Many Requests](https://httpstatuses.com/429).
+To test the rate limiting, make more than 1 requests / sec to the application. The first request within a second will return an [HTTP 200](https://httpstatuses.com/200) and any subsequent requests over the limit will return [HTTP 429 - Too Many Requests](https://httpstatuses.com/429).
 
 ```
 $ curl -I myapp.bosh-lite.com
 HTTP/1.1 200 OK
-$ curl -I myapp.bosh-lite.com
-HTTP/1.1 200 OK
-$ curl -I myapp.bosh-lite.com
-HTTP/1.1 200 OK
-$ curl -I myapp.bosh-lite.com
-HTTP/1.1 200 OK
-$ curl -I myapp.bosh-lite.com
-HTTP/1.1 200 OK
-$ curl -I myapp.bosh-lite.com
-HTTP/1.1 200 OK
-$ curl -I myapp.bosh-lite.com
-HTTP/1.1 200 OK
-$ curl -I myapp.bosh-lite.com
-HTTP/1.1 200 OK
-$ curl -I myapp.bosh-lite.com
-HTTP/1.1 200 OK
-$ curl -I myapp.bosh-lite.com
-HTTP/1.1 200 OK
-$ curl -I myapp.bosh-lite.com
-HTTP/1.1 429 Too Many Requests
 $ curl -I myapp.bosh-lite.com
 HTTP/1.1 429 Too Many Requests
 . . .
@@ -111,12 +89,12 @@ OK
 ```
 
 ### Logs
-You can watch the logs of the rate limiter app to see when requests come it for given IP addresses, as well as when IP address key has expired (i.e. its ok to make more requests)
+You can watch the logs of the rate limiter app to see when requests come it for given IP addresses
 
 ```
 $ cf logs ratelimiter
 
-10:38:26.42 [App/0] OUT limit [10] duration [1m0s]
+10:38:26.42 [App/0] OUT limit [10]
 
 10:38:54.86 [App/0] OUT request from [10.244.0.25]
 10:38:55.05 [RTR/0] OUT ratelimiter.bosh-lite.com - [12/02/2016:16:38:54 +0000] "HEAD / HTTP/1.1" 200 0 0 "-" "curl/7.43.0" 10.244.0.21:48163 x_forwarded_for:"192.168.50.1, 10.244.0.21" x_forwarded_proto:"http" vcap_request_id:384012cd-dacc-49b5-72dc-0004c65aad56 response_time:0.196000975 app_id:2d0e10f0-3bfc-4fe1-85d7-cc8468cecc55

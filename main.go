@@ -12,19 +12,16 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 )
 
 const (
 	DEFAULT_PORT     = "8080"
 	CF_FORWARDED_URL = "X-Cf-Forwarded-Url"
-	DEFAULT_LIMIT    = 10
-	DEFAULT_DURATION = 60
+	DEFAULT_LIMIT    = 1
 )
 
 var (
 	limit       int
-	duration    time.Duration
 	rateLimiter *RateLimiter
 )
 
@@ -32,11 +29,9 @@ func main() {
 	log.SetOutput(os.Stdout)
 
 	limit = getEnv("rate_limit", DEFAULT_LIMIT)
-	duration = time.Duration(getEnv("rate_duration_in_secs", DEFAULT_DURATION)) * time.Second
+	fmt.Printf("limit per sec [%d]\n", limit)
 
-	fmt.Printf("limit [%d] duration [%v]\n", limit, duration)
-
-	rateLimiter = NewRateLimiter(limit, duration)
+	rateLimiter = NewRateLimiter(limit)
 
 	http.HandleFunc("/stats", statsHandler)
 	http.Handle("/", newProxy())
