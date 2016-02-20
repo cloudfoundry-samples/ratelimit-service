@@ -34,13 +34,13 @@ The rate limiter proxy app will now be running at: https://ratelimiter.bosh-lite
 
 
 #### Configure limit of requests per second
-To override the default limit (1), you can set the following application env var and restage:
+To override the default limit (10), you can set the following application env var and restage:
 ```
-$ cd set-env ratelimiter rate_limit 10
+$ cd set-env ratelimiter rate_limit 1
 $ cf env ratelimiter
 
 User-Provided:
-rate_limit: 10
+rate_limit: 1
 
 $ cd restage ratelimiter
 ```
@@ -65,15 +65,15 @@ OK
 
 
 ## Try it out
-To test the rate limiting, you will need to exceed the requests / second.
+To test the rate limiting, you will need to exceed the requests / second limit.
 - requests made that are within the limit will return an [HTTP 200](https://httpstatuses.com/200)
 - requests made that exceed the limit will return an [HTTP 429 - Too Many Requests](https://httpstatuses.com/429)
 
-**In the examples below we will use a rate limit of 10 requests / per second.**
+**In the examples below we will use a rate limit of 10 requests / per second per client IP**
 
 
 ### Client-side tool
-There is a great command line tool (similar to Apache Bench) called [boom](https://github.com/rakyll/boo://github.com/rakyll/boom) which can send a number of concurrent requests and also allow you to throttle the number of concurrent client requests.
+There is a great command line tool (similar to Apache Bench) called [boom](https://github.com/rakyll/boo://github.com/rakyll/boom) which allows you to send a number of requests and also throttle the number of concurrent client requests.
 
 To install client side load testing tool:
 ```
