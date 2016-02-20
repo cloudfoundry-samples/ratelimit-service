@@ -3,6 +3,10 @@
 	"GoVersion": "go1.5.3",
 	"Deps": [
 		{
+			"ImportPath": "github.com/juju/ratelimit",
+			"Rev": "77ed1c8a01217656d2080ad51981f6e99adaa177"
+		},
+		{
 			"ImportPath": "github.com/onsi/ginkgo",
 			"Comment": "v1.1.0-41-g38caab9",
 			"Rev": "38caab951a9ff39f0e61294a1dbaaa074a39228b"
