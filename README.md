@@ -8,7 +8,7 @@ For example, maximum 10 requests per second per client.
 
 If you would like more information about Route Services in Cloud Foundry, please refer to [CF dev docs](http://docs.cloudfoundry.org/services/index.html#route-services).
 
-*NOTE: This is a example only and is not for production use, but enough with the disclaimers...*
+*NOTE: This is an example only and is not for production use, but enough with the disclaimers...*
 
 ## Prerequisites
 - A Cloud Foundry and Diego deployment
