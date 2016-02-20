@@ -169,8 +169,8 @@ $ cf logs ratelimiter
 
 ## Misc
 The rate limit app also has a `/stats` endpoint that displays the current list of IPs and available requests, which can be useful for debugging or displaying current stats.
-For example, if the limit is set to 10 and there are 3 available, then it means that there can only be 3 more requests made per second until the limit is exceeded.
-If the available number is zero, then it means the rate limit has been exceeded for the client IP.
+
+For example, if the limit is set to 10 then the "available" number will be a number between 0 and 10, with zero meaning that the (req/sec) rate limit has been exceeded for the client IP.
 
 
 
