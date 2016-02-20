@@ -33,7 +33,7 @@ $ cf push ratelimiter
 The rate limiter proxy app will now be running at: https://ratelimiter.bosh-lite.com.
 
 
-#### Configure limit of requests per second
+#### (Optional) Configure limit of requests per second
 To override the default limit (10), you can set the following application env var and restage:
 ```
 $ cd set-env ratelimiter rate_limit 1
