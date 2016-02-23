@@ -85,7 +85,7 @@ For example: 100 requests, 10 concurrently and a QPS of 10
 
 ```
 $ boom -n 100 -c 10 -q 10 http://myapp.bosh-lite.com
-100 / 100 Boooooooooooooooooooooooooooooooooooooooooooooooooooooooooo! 100.00 %
+100 / 100 Boooooooooooooooooooooooooooooooooooooooooooooooooooooooooom! 100.00 %
 
 Summary:
   Total:        10.1374 secs.
@@ -108,7 +108,7 @@ In this example, since we will be sending 12 requests / sec, then only roughly 8
 
 ```
 $ boom -n 100 -c 12 -q 12 http://myapp.bosh-lite.com
-100 / 100 Boooooooooooooooooooooooooooooooooooooooooooooooooooooooooo! 100.00 %
+100 / 100 Boooooooooooooooooooooooooooooooooooooooooooooooooooooooooom! 100.00 %
 Summary:
   Total:        8.3826 secs.
   Slowest:      0.6653 secs.
