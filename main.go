@@ -29,7 +29,7 @@ func main() {
 	log.SetOutput(os.Stdout)
 
 	limit = getEnv("rate_limit", DEFAULT_LIMIT)
-	fmt.Printf("limit per sec [%d]\n", limit)
+	log.Printf("limit per sec [%d]\n", limit)
 
 	rateLimiter = NewRateLimiter(limit)
 
@@ -59,7 +59,8 @@ func newProxy() http.Handler {
 func statsHandler(w http.ResponseWriter, r *http.Request) {
 	stats, err := json.Marshal(rateLimiter.GetStats())
 	if err != nil {
-		fmt.Println("error:", err)
+		http.Error(w, err.Error(), 500)
+		return
 	}
 	fmt.Fprintf(w, string(stats))
 }
@@ -106,7 +107,7 @@ func (r *RateLimitedRoundTripper) RoundTrip(req *http.Request) (*http.Response, 
 
 	remoteIP := strings.Split(req.RemoteAddr, ":")[0]
 
-	fmt.Printf("request from [%s]\n", remoteIP)
+	log.Printf("request from [%s]\n", remoteIP)
 	if r.rateLimiter.ExceedsLimit(remoteIP) {
 		resp := &http.Response{
 			StatusCode: 429,
