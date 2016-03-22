@@ -29,7 +29,7 @@ var (
 func main() {
 	log.SetOutput(os.Stdout)
 
-	limit = getEnv("rate_limit", DEFAULT_LIMIT)
+	limit = getEnv("RATE_LIMIT", DEFAULT_LIMIT)
 	log.Printf("limit per sec [%d]\n", limit)
 
 	rateLimiter = NewRateLimiter(limit)
