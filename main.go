@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -73,6 +74,14 @@ func getPort() string {
 	return port
 }
 
+func skipSslValidation() bool {
+	var skipSslValidation bool
+	var err error
+	if skipSslValidation, err = strconv.ParseBool(os.Getenv("SKIP_SSL_VALIDATION")); err != nil {
+		skipSslValidation = true
+	}
+	return skipSslValidation
+}
 func getEnv(env string, defaultValue int) int {
 	var (
 		v      string
@@ -95,9 +104,12 @@ type RateLimitedRoundTripper struct {
 }
 
 func newRateLimitedRoundTripper() *RateLimitedRoundTripper {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: skipSslValidation()},
+	}
 	return &RateLimitedRoundTripper{
 		rateLimiter: rateLimiter,
-		transport:   http.DefaultTransport,
+		transport:   tr,
 	}
 }
 
