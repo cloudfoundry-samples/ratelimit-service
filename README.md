@@ -26,7 +26,7 @@ $ git clone https://github.com/cloudfoundry-samples/ratelimit-service.git
 
 ### Deploy Rate Limiter App
 ```
-$ cd ratelimit-service
+$ cf ratelimit-service
 $ cf push ratelimiter
 ```
 
@@ -36,15 +36,23 @@ The rate limiter proxy app will now be running at: https://ratelimiter.bosh-lite
 #### (Optional) Configure limit of requests per second
 To override the default limit (10), you can set the following application env var and restage:
 ```
-$ cd set-env ratelimiter rate_limit 1
+$ cf set-env ratelimiter RATE_LIMIT 1
 $ cf env ratelimiter
 
 User-Provided:
-rate_limit: 1
+RATE_LIMIT: 1
 
-$ cd restage ratelimiter
+$ cf restage ratelimiter
 ```
 
+#### (Optional) Skip SSL Validation
+If you set the following environment variable to false, the route service
+will validate SSL certificates. By default the route service skips SSL validation.
+
+```
+$ cf set-env ratelimiter SKIP_SSL_VALIDATION false
+$ cf restage ratelimiter
+```
 ### Create Route Service
 The following will create a route service instance using a user-provided service and specifies the route service url (see step above).
 
