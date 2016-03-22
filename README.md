@@ -26,7 +26,7 @@ $ git clone https://github.com/cloudfoundry-samples/ratelimit-service.git
 
 ### Deploy Rate Limiter App
 ```
-$ cf ratelimit-service
+$ cd ratelimit-service
 $ cf push ratelimiter
 ```
 
