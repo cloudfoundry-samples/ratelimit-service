@@ -81,18 +81,18 @@ To test the rate limiting, you will need to exceed the requests / second limit.
 
 
 ### Client-side tool
-There is a great command line tool (similar to Apache Bench) called [boom](https://github.com/rakyll/boo://github.com/rakyll/boom) which allows you to send a number of requests and also throttle the number of concurrent client requests.
+There is a great command line tool (similar to Apache Bench) called [hey](https://github.com/rakyll/hey) which allows you to send a number of requests and also throttle the number of concurrent client requests.
 
 To install client side load testing tool:
 ```
-go get github.com/rakyll/boom
+go get -u github.com/rakyll/hey
 ```
 
 ### Example (not exceeding rate limit)
 For example: 100 requests, 10 concurrently and a QPS of 10
 
 ```
-$ boom -n 100 -c 10 -q 10 http://myapp.bosh-lite.com
+$ hey -n 100 -c 10 -q 10 http://myapp.bosh-lite.com
 100 / 100 Boooooooooooooooooooooooooooooooooooooooooooooooooooooooooom! 100.00 %
 
 Summary:
@@ -115,7 +115,7 @@ In this example, since we will be sending 12 requests / sec, then only roughly 8
 
 
 ```
-$ boom -n 100 -c 12 -q 12 http://myapp.bosh-lite.com
+$ hey -n 100 -c 12 -q 12 http://myapp.bosh-lite.com
 100 / 100 Boooooooooooooooooooooooooooooooooooooooooooooooooooooooooom! 100.00 %
 Summary:
   Total:        8.3826 secs.
